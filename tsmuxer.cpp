@@ -89,6 +89,9 @@ class TsMuxer {
   void writePmt();
   void writePesPacket(const FrameToEncode&);
 
+  bool shouldWritePsi(uint64_t pts_in_90khz, Codec codec) const;
+  void writePsiIfNecessary(uint64_t pts_in_90khz, Codec codec);
+
   void writeToBuffer(const u_char* data, size_t len);
   void writeToBuffer(const std::vector<u_char>& data);
   void writeStuffingBytes();
@@ -119,6 +122,9 @@ class TsMuxer {
 
   unsigned pat_cc_ = 0;
   unsigned pmt_cc_ = 0;
+
+  uint64_t latest_90khz_pts_psi_written_ = 0;  // Should use optional, not supported in old mac compilers. Using "0" as "not set"
+  const uint64_t max_psi_period_in_90khz_ = 1 * 90'000;  // 0 for every packet
 };
 
 /*
@@ -321,6 +327,43 @@ int TsMuxer::writeTsPes() {
   return writePesPayload();
 }
 
+bool TsMuxer::shouldWritePsi(uint64_t pts_in_90khz, Codec codec) const {
+  if (latest_90khz_pts_psi_written_ == 0) {
+    return true;
+  }
+  if (max_psi_period_in_90khz_ == 0) {
+    return true;
+  }
+
+  // This should not happen, but just in case
+  if (pts_in_90khz < latest_90khz_pts_psi_written_) {
+    return true;
+  }
+
+  if (codec == Codec::H264) {
+    return true;  // TODO: parse bitstream and return (frame_type == intra)
+  }
+
+  // For AAC:
+  if (pts_in_90khz - latest_90khz_pts_psi_written_ > max_psi_period_in_90khz_) {
+    return true;
+  }
+
+  return false;
+} 
+
+
+void TsMuxer::writePsiIfNecessary(uint64_t pts_in_90khz, Codec codec) {
+  if (!shouldWritePsi(pts_in_90khz, codec)) {
+    return;
+  }
+  
+  writePat();
+  writePmt();
+
+  latest_90khz_pts_psi_written_ = pts_in_90khz;
+}
+
 u_char* TsMuxer::muxAac(const u_char* data, int data_len, unsigned long pts_in_90khz, int* muxed_len) {
   bytes_written_ = 0;  // Reset the buffer pointer
 
@@ -337,10 +380,8 @@ u_char* TsMuxer::muxAac(const u_char* data, int data_len, unsigned long pts_in_9
   current_stream_ = &streams_.at(Codec::AAC);
   current_stream_->pcr += AUDIO_FRAME_CLOCK;
 
-  // We are overwriting PAT and PMT (we should do it every X packets). However,
-  // this ensures that we can split the file anywhere we want...
-  writePat();
-  writePmt();
+
+  writePsiIfNecessary(pts_in_90khz, Codec::AAC);
   writePesPacket(frame_to_encode);
 
   *muxed_len = bytes_written_;
@@ -363,10 +404,7 @@ u_char* TsMuxer::muxH264(const u_char* data, int data_len, unsigned long pts_in_
   current_stream_ = &streams_.at(Codec::H264);
   current_stream_->pcr += VIDEO_FRAME_CLOCK;
 
-  // We are overwriting PAT and PMT (we should do it every X packets). However,
-  // this ensures that we can split the file anywhere we want...
-  writePat();
-  writePmt();
+  writePsiIfNecessary(pts_in_90khz, Codec::H264);
   writePesPacket(frame_to_encode);
 
   *muxed_len = bytes_written_;
