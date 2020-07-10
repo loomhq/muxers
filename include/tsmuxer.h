@@ -1,3 +1,6 @@
+#ifndef TSMUXER_H_HEADER
+#define TSMUXER_H_HEADER
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -18,4 +21,6 @@ void destroyTsMuxer(struct TsMuxer* ts_muxer);
 #ifdef __cplusplus
 }
 #endif
+
+#endif  // TSMUXER_H_HEADER
 
