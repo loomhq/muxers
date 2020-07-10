@@ -130,19 +130,22 @@ class TsMuxer {
 /*
  Public interface implementation BEGIN
  */
-const unsigned char* muxAac(struct TsMuxer* muxer, const unsigned char* data, int length, unsigned long pts_in_90khz,
-                            int* muxed_len) {
-  return muxer->muxAac(data, length, pts_in_90khz, muxed_len);
-}
-const unsigned char* muxH264(struct TsMuxer* muxer, const unsigned char* data, int length, unsigned long pts_in_90khz,
-                             int* muxed_len) {
-  return muxer->muxH264(data, length, pts_in_90khz, muxed_len);
-}
+extern "C" {
+  const unsigned char* muxAac(struct TsMuxer* muxer, const unsigned char* data, int length, unsigned long pts_in_90khz,
+                              int* muxed_len) {
+    return muxer->muxAac(data, length, pts_in_90khz, muxed_len);
+  }
+  const unsigned char* muxH264(struct TsMuxer* muxer, const unsigned char* data, int length, unsigned long pts_in_90khz,
+                               int* muxed_len) {
+    return muxer->muxH264(data, length, pts_in_90khz, muxed_len);
+  }
 
-struct TsMuxer* createTsMuxer() {
-  return new TsMuxer();
+  struct TsMuxer* createTsMuxer() {
+    return new TsMuxer();
+  }
+
+  void destroyTsMuxer(struct TsMuxer* ts_muxer) { delete ts_muxer; }
 }
-void destroyTsMuxer(struct TsMuxer* ts_muxer) { delete ts_muxer; }
 /*
 Public interface implementation END
 */
