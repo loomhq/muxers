@@ -73,10 +73,10 @@ struct FrameToEncode {
   Codec codec;
 };
 
-class TsMuxer {
+class TsMuxerClass {
  public:
-  TsMuxer(bool video_only = false);
-  ~TsMuxer() = default;
+  TsMuxerClass(bool video_only = false);
+  ~TsMuxerClass() = default;
 
   u_char* muxAac(const u_char* data, int data_len, unsigned long pts_in_90khz, int* muxed_len);
 
@@ -131,20 +131,36 @@ class TsMuxer {
  Public interface implementation BEGIN
  */
 extern "C" {
+
+  // Implementation of the type we expose publicly
+  struct TsMuxer {
+    void *obj;
+  };
+
   const unsigned char* muxAac(struct TsMuxer* muxer, const unsigned char* data, int length, unsigned long pts_in_90khz,
                               int* muxed_len) {
-    return muxer->muxAac(data, length, pts_in_90khz, muxed_len);
+    return (static_cast<TsMuxerClass *>(muxer->obj))->muxAac(data, length, pts_in_90khz, muxed_len);
   }
   const unsigned char* muxH264(struct TsMuxer* muxer, const unsigned char* data, int length, unsigned long pts_in_90khz,
                                int* muxed_len) {
-    return muxer->muxH264(data, length, pts_in_90khz, muxed_len);
+    return (static_cast<TsMuxerClass *>(muxer->obj))->muxH264(data, length, pts_in_90khz, muxed_len);
   }
 
   struct TsMuxer* createTsMuxer() {
-    return new TsMuxer();
+    struct TsMuxer* ts_muxer = (struct TsMuxer*)malloc(sizeof(struct TsMuxer));
+    TsMuxerClass *obj = new TsMuxerClass();
+    ts_muxer->obj = obj;
+    return ts_muxer;
   }
 
-  void destroyTsMuxer(struct TsMuxer* ts_muxer) { delete ts_muxer; }
+  void destroyTsMuxer(struct TsMuxer* ts_muxer) {
+    if (!ts_muxer) {
+      return;
+    }
+
+    delete static_cast<TsMuxerClass*>(ts_muxer->obj);
+    free(ts_muxer);
+  }
 }
 /*
 Public interface implementation END
@@ -181,7 +197,7 @@ struct OutputStream {
   unsigned long pts = 0;
 };
 
-TsMuxer::TsMuxer(bool video_only) {
+TsMuxerClass::TsMuxerClass(bool video_only) {
   if (!video_only) {
     streams_[Codec::AAC] = OutputStream();
     streams_[Codec::AAC].pes_pid = PES_ADTS_PID;
@@ -194,7 +210,7 @@ TsMuxer::TsMuxer(bool video_only) {
 }
 
 // Table 2-28 of ISO 13818-1
-void TsMuxer::buildPmt() {
+void TsMuxerClass::buildPmt() {
   pmt_ = {0x47, 0x50, 0x00, 0x10};
 
   pmt_.push_back(0x00);  // pointer_field
@@ -256,7 +272,7 @@ void TsMuxer::buildPmt() {
   pmt_.push_back(crc32);
 }
 
-void TsMuxer::writeToBuffer(const u_char* data, size_t len) {
+void TsMuxerClass::writeToBuffer(const u_char* data, size_t len) {
   assert(buffer_.size() < kMaxBufferLength);
 
   if (static_cast<uint32_t>(buffer_.size()) < (bytes_written_ + len)) {
@@ -272,9 +288,9 @@ void TsMuxer::writeToBuffer(const u_char* data, size_t len) {
   bytes_written_ += len;
 }
 
-void TsMuxer::writeToBuffer(const std::vector<u_char>& data) { writeToBuffer(data.data(), data.size()); }
+void TsMuxerClass::writeToBuffer(const std::vector<u_char>& data) { writeToBuffer(data.data(), data.size()); }
 
-void TsMuxer::writePesPacket(const FrameToEncode& frame) {
+void TsMuxerClass::writePesPacket(const FrameToEncode& frame) {
   // The PES packetization will be fed to the TS packetization, so we need to
   // run the PesTS packet with the updated buffer until the whole frame is
   // consumed
@@ -293,7 +309,7 @@ void TsMuxer::writePesPacket(const FrameToEncode& frame) {
   }
 }
 
-int TsMuxer::writeTsPes() {
+int TsMuxerClass::writeTsPes() {
   // write ts packet header
   std::array<u_char, 4> ts_header = {0x47, 0x00, 0x00, 0x10};
   OutputStream* stream = getCurrentStream();
@@ -330,7 +346,7 @@ int TsMuxer::writeTsPes() {
   return writePesPayload();
 }
 
-bool TsMuxer::shouldWritePsi(uint64_t pts_in_90khz, Codec codec) const {
+bool TsMuxerClass::shouldWritePsi(uint64_t pts_in_90khz, Codec codec) const {
   if (latest_90khz_pts_psi_written_ == 0) {
     return true;
   }
@@ -356,7 +372,7 @@ bool TsMuxer::shouldWritePsi(uint64_t pts_in_90khz, Codec codec) const {
 } 
 
 
-void TsMuxer::writePsiIfNecessary(uint64_t pts_in_90khz, Codec codec) {
+void TsMuxerClass::writePsiIfNecessary(uint64_t pts_in_90khz, Codec codec) {
   if (!shouldWritePsi(pts_in_90khz, codec)) {
     return;
   }
@@ -367,7 +383,7 @@ void TsMuxer::writePsiIfNecessary(uint64_t pts_in_90khz, Codec codec) {
   latest_90khz_pts_psi_written_ = pts_in_90khz;
 }
 
-u_char* TsMuxer::muxAac(const u_char* data, int data_len, unsigned long pts_in_90khz, int* muxed_len) {
+u_char* TsMuxerClass::muxAac(const u_char* data, int data_len, unsigned long pts_in_90khz, int* muxed_len) {
   bytes_written_ = 0;  // Reset the buffer pointer
 
   // Time base for ts is 90000
@@ -391,7 +407,7 @@ u_char* TsMuxer::muxAac(const u_char* data, int data_len, unsigned long pts_in_9
   return buffer_.data();
 }
 
-u_char* TsMuxer::muxH264(const u_char* data, int data_len, unsigned long pts_in_90khz, int* muxed_len) {
+u_char* TsMuxerClass::muxH264(const u_char* data, int data_len, unsigned long pts_in_90khz, int* muxed_len) {
   bytes_written_ = 0;  // Reset the buffer pointer
 
   // Time base for ts is 90000
@@ -414,9 +430,9 @@ u_char* TsMuxer::muxH264(const u_char* data, int data_len, unsigned long pts_in_
   return buffer_.data();
 }
 
-OutputStream* TsMuxer::getCurrentStream() const { return current_stream_; }
+OutputStream* TsMuxerClass::getCurrentStream() const { return current_stream_; }
 
-void TsMuxer::writeStuffingBytes() {
+void TsMuxerClass::writeStuffingBytes() {
   const u_char stuffing_byte = 0xff;
 
   int bytes_written_in_ts_packet = bytes_written_ % MPEGTS_PACKET_SIZE;
@@ -434,7 +450,7 @@ void TsMuxer::writeStuffingBytes() {
 /**
  Payload references the Program Map Table (PID 4096)
  */
-void TsMuxer::writePat() {
+void TsMuxerClass::writePat() {
   std::array<u_char, 4> pat_header = {0x47, 0x40, 0x00, 0x10};  // 4 bytes  010 0000000000000 00 01 0000
   std::array<u_char, 13> pat_data_bytes = {0x00, 0x00, 0xb0, 0x0d, 0x00, 0x01, 0xc1,
                                            0x00, 0x00, 0x00, 0x01, 0xf0, 0x00};
@@ -457,7 +473,7 @@ void TsMuxer::writePat() {
  PID 0100 (256) -> Stream type 1b H.264/14496-10 video (MPEG-4/AVC)
  PID 0101 (257) -> Stream type 0f 13818-7 Audio with ADTS transport syntax
  */
-void TsMuxer::writePmt() {
+void TsMuxerClass::writePmt() {
   // Set continuity counter
   pmt_[3] |= 0x0f & pmt_cc_;
   writeToBuffer(pmt_);
@@ -467,7 +483,7 @@ void TsMuxer::writePmt() {
   writeStuffingBytes();
 }
 
-bool TsMuxer::packetHasPcr() {
+bool TsMuxerClass::packetHasPcr() {
   //	output_stream* stream = get_current_stream(writer);
   //	return stream->pes_pid == PES_H264_PID && get_nalu_type(stream->frame)
   //== SPS;
@@ -481,7 +497,7 @@ bool TsMuxer::packetHasPcr() {
  - the remaining frame size is not enough to fill the ts packet, so we need to
  insert stuffing bytes on the adaptation field section
  */
-int TsMuxer::adaptationFieldLength() {
+int TsMuxerClass::adaptationFieldLength() {
   OutputStream* stream = getCurrentStream();
   int pes_header_size = stream->pes_pid == PES_H264_PID ? PES_H264_HEADER_SIZE : PES_ADTS_HEADER_SIZE;
   int afsize = 0;
@@ -504,7 +520,7 @@ int TsMuxer::adaptationFieldLength() {
   return afsize;
 }
 
-void TsMuxer::write_adaptation_field_section() {
+void TsMuxerClass::write_adaptation_field_section() {
   /*															 	bits
    adaptation_field_length
    8 if (adaptation_field_length > 0) { discontinuity_indicator
@@ -586,7 +602,7 @@ static void writePts(uint8_t* q, uint8_t four_bits, int64_t pts) {
 /**
  Table 2-17 PES packet "PES_packet()"
  */
-void TsMuxer::writePesHeader(int adapfield_size) {
+void TsMuxerClass::writePesHeader(int adapfield_size) {
   /*
   clang-format off
 
@@ -674,7 +690,7 @@ void TsMuxer::writePesHeader(int adapfield_size) {
   writeToBuffer(pes_header);
 }
 
-int TsMuxer::writePesPayload() {
+int TsMuxerClass::writePesPayload() {
   OutputStream* stream = getCurrentStream();
   int max_possible_size_to_write = MPEGTS_PACKET_SIZE - (this->bytes_written_ % MPEGTS_PACKET_SIZE);
   unsigned bytes_to_write = std::min(max_possible_size_to_write, stream->frame_size_bytes);
@@ -684,7 +700,7 @@ int TsMuxer::writePesPayload() {
   return bytes_to_write;
 }
 
-void TsMuxer::writeH264AudIfAbsent() {
+void TsMuxerClass::writeH264AudIfAbsent() {
   // Write AUD if it's not already in the bitstream
   OutputStream* stream = getCurrentStream();
   const u_char* d = stream->data;
