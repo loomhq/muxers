@@ -6,6 +6,8 @@
 #include "include/tsmuxer.h"
 #endif
 
+#include "H264Utils.h"
+
 #include <assert.h>
 #include <stddef.h>
 #include <string.h>
@@ -89,8 +91,8 @@ class TsMuxerClass {
   void writePmt();
   void writePesPacket(const FrameToEncode&);
 
-  bool shouldWritePsi(uint64_t pts_in_90khz, Codec codec) const;
-  void writePsiIfNecessary(uint64_t pts_in_90khz, Codec codec);
+  bool shouldWritePsi(const uint8_t* data, uint32_t length, uint64_t pts_in_90khz, Codec codec) const;
+  void writePsiIfNecessary(const uint8_t* data, uint32_t length, uint64_t pts_in_90khz, Codec codec);
 
   void writeToBuffer(const u_char* data, size_t len);
   void writeToBuffer(const std::vector<u_char>& data);
@@ -346,7 +348,7 @@ int TsMuxerClass::writeTsPes() {
   return writePesPayload();
 }
 
-bool TsMuxerClass::shouldWritePsi(uint64_t pts_in_90khz, Codec codec) const {
+bool TsMuxerClass::shouldWritePsi(const uint8_t* data, uint32_t length, uint64_t pts_in_90khz, Codec codec) const {
   if (latest_90khz_pts_psi_written_ == 0) {
     return true;
   }
@@ -360,7 +362,9 @@ bool TsMuxerClass::shouldWritePsi(uint64_t pts_in_90khz, Codec codec) const {
   }
 
   if (codec == Codec::H264) {
-    return true;  // TODO: parse bitstream and return (frame_type == intra)
+    // "is_intra": either it has intra or SPS
+    bool is_intra = H264Utils::hasAnnexBNalOfType(data, length, { H264Utils::NalType::SequenceParameterSet, H264Utils::NalType::SliceIdrPicture});
+    return is_intra;
   }
 
   // For AAC:
@@ -372,8 +376,8 @@ bool TsMuxerClass::shouldWritePsi(uint64_t pts_in_90khz, Codec codec) const {
 } 
 
 
-void TsMuxerClass::writePsiIfNecessary(uint64_t pts_in_90khz, Codec codec) {
-  if (!shouldWritePsi(pts_in_90khz, codec)) {
+void TsMuxerClass::writePsiIfNecessary(const uint8_t* data, uint32_t length, uint64_t pts_in_90khz, Codec codec) {
+  if (!shouldWritePsi(data, length, pts_in_90khz, codec)) {
     return;
   }
   
@@ -400,7 +404,7 @@ u_char* TsMuxerClass::muxAac(const u_char* data, int data_len, unsigned long pts
   current_stream_->pcr += AUDIO_FRAME_CLOCK;
 
 
-  writePsiIfNecessary(pts_in_90khz, Codec::AAC);
+  writePsiIfNecessary(data, data_len, pts_in_90khz, Codec::AAC);
   writePesPacket(frame_to_encode);
 
   *muxed_len = bytes_written_;
@@ -423,7 +427,7 @@ u_char* TsMuxerClass::muxH264(const u_char* data, int data_len, unsigned long pt
   current_stream_ = &streams_.at(Codec::H264);
   current_stream_->pcr += VIDEO_FRAME_CLOCK;
 
-  writePsiIfNecessary(pts_in_90khz, Codec::H264);
+  writePsiIfNecessary(data, data_len, pts_in_90khz, Codec::H264);
   writePesPacket(frame_to_encode);
 
   *muxed_len = bytes_written_;
