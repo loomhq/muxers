@@ -122,8 +122,8 @@ class TsMuxerClass {
   std::map<Codec, OutputStream> streams_;
   OutputStream* current_stream_ = nullptr;
 
-  unsigned pat_cc_ = 0;
-  unsigned pmt_cc_ = 0;
+  uint8_t pat_cc_ = 0;
+  uint8_t pmt_cc_ = 0;
 
   uint64_t latest_90khz_pts_psi_written_ = 0;  // Should use optional, not supported in old mac compilers. Using "0" as "not set"
   const uint64_t max_psi_period_in_90khz_ = 1 * 90'000;  // 0 for every packet
@@ -460,7 +460,7 @@ void TsMuxerClass::writePat() {
                                            0x00, 0x00, 0x00, 0x01, 0xf0, 0x00};
   std::array<u_char, 4> pat_crc_32 = {0x2a, 0xb1, 0x04, 0xb2};
   // Set continuity counter
-  pat_header[3] |= 0x0f & pat_cc_;
+  pat_header[3] = (pat_header[3] & 0xf0) | pat_cc_;
 
   writeToBuffer(pat_header.data(), pat_header.size());
   writeToBuffer(pat_data_bytes.data(), pat_data_bytes.size());
@@ -479,7 +479,7 @@ void TsMuxerClass::writePat() {
  */
 void TsMuxerClass::writePmt() {
   // Set continuity counter
-  pmt_[3] |= 0x0f & pmt_cc_;
+  pmt_[3] = (pmt_[3] & 0xf0) | pmt_cc_;
   writeToBuffer(pmt_);
 
   // continuity counter is a 4 bit field that must be reseted on overflow
