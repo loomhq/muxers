@@ -7,13 +7,9 @@ namespace {
 
 class TsMuxerTest : public ::testing::Test {
  protected:
-  void SetUp() override {
-    ts_muxer_ = createTsMuxer();
-  }
+  void SetUp() override { ts_muxer_ = createTsMuxer(); }
 
-  void TearDown() override {
-    destroyTsMuxer(ts_muxer_);
-  }
+  void TearDown() override { destroyTsMuxer(ts_muxer_); }
 
   struct TsMuxer* ts_muxer_ = nullptr;
 };
