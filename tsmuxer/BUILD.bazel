@@ -1,0 +1,13 @@
+cc_library(
+    name = "tsmuxer",
+    srcs = [
+        "H264Utils.cpp",
+        "tsmuxer.cpp",
+    ],
+    hdrs = [
+        "H264Utils.h",
+        "tsmuxer.h",
+    ],
+    copts = ["-Imuxer"],
+    visibility = ['//visibility:public'], 
+)

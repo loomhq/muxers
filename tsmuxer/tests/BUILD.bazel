@@ -1,0 +1,12 @@
+cc_test(
+    name = "tsmuxer-tests",
+    srcs = [
+        "testh264utils.cpp",
+        "testtsmuxer.cpp",
+    ],
+    deps = [
+        "//tsmuxer:tsmuxer",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+)

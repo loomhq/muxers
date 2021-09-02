@@ -1,12 +1,9 @@
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
 #pragma warning(disable : 4099 4244 4267 4018)
-
-#include "tsmuxer.h"
-#elif __APPLE__
-#include "include/tsmuxer.h"
 #endif
 
-#include "H264Utils.h"
+#include "tsmuxer/tsmuxer.h"
+#include "tsmuxer/H264Utils.h"
 
 #include <assert.h>
 #include <stddef.h>
@@ -154,7 +151,7 @@ class TsMuxerClass {
 
   uint64_t latest_90khz_pts_psi_written_ = 0;  // Should use optional,
   // not supported in old mac compilers. Using "0" as "not set"
-  const uint64_t max_psi_period_in_90khz_ = 1 * 90'000;  // 0 for every packet
+  const uint64_t max_psi_period_in_90khz_ = 1 * 90000;  // 0 for every packet
 };
 
 /*
