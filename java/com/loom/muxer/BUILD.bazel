@@ -1,0 +1,13 @@
+android_library(
+    name = "tsmuxer",
+    srcs = [
+        "TsMuxer.java",
+        "TsMuxerImpl.java",
+    ],
+    custom_package = "com.loom.muxer",
+    manifest = "AndroidManifest.xml",
+    deps = [
+      "//tsmuxer/jni:tsmuxer-jni",
+    ],
+    visibility = ["//:__pkg__"]
+)

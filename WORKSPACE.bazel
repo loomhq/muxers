@@ -1,5 +1,15 @@
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
+android_sdk_repository(
+    name = "androidsdk",
+    api_level = 30,
+    build_tools_version = "30.0.3",
+)
+
+android_ndk_repository(
+    name = "androidndk"
+)
+
 git_repository(
     name = "gtest",
     branch = "v1.10.x",

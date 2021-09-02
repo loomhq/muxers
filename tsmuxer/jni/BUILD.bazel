@@ -1,0 +1,14 @@
+
+cc_library(
+    name = "tsmuxer-jni",
+    srcs = [
+        "tsmuxer_jni.cpp",
+    ],
+    hdrs = [
+    ],
+    deps = [
+      "//tsmuxer:tsmuxer",
+    ],
+    alwayslink = True,
+    visibility = ['//visibility:public'], 
+)

@@ -1,0 +1,12 @@
+common:android_x86 --crosstool_top=@androidndk//:default_crosstool
+common:android_x86 --cpu=x86
+common:android_x86 --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
+
+common:android_armeabi-v7a --crosstool_top=@androidndk//:default_crosstool
+common:android_armeabi-v7a --cpu=armeabi-v7a
+common:android_armeabi-v7a --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
+
+# In general
+common:android_<abi> --crosstool_top=@androidndk//:default_crosstool
+common:android_<abi> --cpu=<abi>
+common:android_<abi> --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
