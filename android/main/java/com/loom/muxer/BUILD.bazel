@@ -7,7 +7,10 @@ android_library(
     custom_package = "com.loom.muxer",
     manifest = "AndroidManifest.xml",
     deps = [
-      "//tsmuxer/jni:tsmuxer-jni",
+        "//tsmuxer/jni:tsmuxer-jni",
     ],
-    visibility = ["//:__pkg__"]
+    visibility = [
+        "//:__pkg__", 
+        "//android/test/java/com/loom/muxer:__pkg__"
+    ]
 )

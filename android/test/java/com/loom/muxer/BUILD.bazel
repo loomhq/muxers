@@ -1,0 +1,36 @@
+android_local_test(
+    name = "tsmuxer_test",
+    srcs = [
+        "TsMuxerTests.java",
+    ],
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//android/main/java/com/loom/muxer:tsmuxer",
+        "@robolectric//bazel:robolectric",
+    ],
+)
+
+android_library(
+    name = "tsmuxer_test_lib",
+    srcs = [
+        "TsMuxerTests.java",
+    ],
+    deps = [
+      "//android/main/java/com/loom/muxer:tsmuxer",
+    ],
+)
+
+
+android_binary(
+    name = "tsmuxer_test_app",
+    # instruments = "//java/com/loom/muxer:tsmuxer_test_app",
+    manifest = "AndroidManifest.xml",
+    deps = [":tsmuxer_test_lib"],
+)
+
+android_instrumentation_test(
+    name = "main_test",
+    args = ["--enable_display=false"],
+    target_device = "@android_test_support//tools/android/emulated_devices/generic_phone:android_{api}_x86".format(api = 23),
+    test_app = ":tsmuxer_test_app",
+)

@@ -4,7 +4,7 @@ package com.loom.muxer;
 
 import java.nio.ByteBuffer;
 
-class TsMuxerImpl extends Object implements TsMuxer {
+public class TsMuxerImpl extends Object implements TsMuxer {
     static {
         System.loadLibrary("tsmuxer-jni");
     }
