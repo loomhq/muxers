@@ -1,0 +1,11 @@
+cc_test(
+    name = "tsmuxer_tests",
+    srcs = glob(["*.cpp"]),
+    copts = ["-Isrc/tsmuxer"],
+    linkstatic = True,
+    deps = [
+        "//src/tsmuxer:tsmuxer",
+        "@gtest",
+        "@gtest//:gtest_main",
+    ],
+)
