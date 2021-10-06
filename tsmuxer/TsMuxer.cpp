@@ -210,7 +210,7 @@ Public interface implementation END
 
 #define PES_H264_PID 256
 #define PES_ADTS_PID 257
-#define PES_H264_HEADER_SIZE 19
+#define PES_H264_HEADER_SIZE 14
 #define PES_ADTS_HEADER_SIZE 14
 
 // From ISO/IEC 13818-1, "Table 2-18 – Stream_id assignments"
