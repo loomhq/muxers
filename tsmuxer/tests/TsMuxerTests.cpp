@@ -81,7 +81,10 @@ namespace {
 
 class TsMuxerTest : public ::testing::Test {
  protected:
-  void SetUp() override { ts_muxer_ = createTsMuxer(); }
+  void SetUp() override {
+    // TODO: tests should test bitmask interface.
+    ts_muxer_ = createTsMuxer(TSMUXER_HAS_H264 | TSMUXER_HAS_AAC);
+  }
 
   void TearDown() override { destroyTsMuxer(ts_muxer_); }
 

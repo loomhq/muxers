@@ -89,7 +89,7 @@ struct FrameToEncode {
 
 class TsMuxerClass {
  public:
-  TsMuxerClass(bool video_only = false);
+  TsMuxerClass(uint32_t flags);
   ~TsMuxerClass() = default;
 
   u_char* muxAac(const u_char* data,
@@ -139,6 +139,8 @@ class TsMuxerClass {
   int writePesPayload();
 
  private:
+  uint32_t config_flags_;
+
   std::vector<u_char> buffer_;  ///< Internal buffer to write to
   std::vector<u_char> pmt_;
   uint32_t bytes_written_ = 0;
@@ -181,9 +183,9 @@ const unsigned char* muxH264(struct TsMuxer* muxer,
       ->muxH264(data, length, pts_in_90khz, muxed_len);
 }
 
-struct TsMuxer* createTsMuxer() {
+struct TsMuxer* createTsMuxer(uint32_t flags) {
   struct TsMuxer* ts_muxer = (struct TsMuxer*)malloc(sizeof(struct TsMuxer));
-  TsMuxerClass* obj = new TsMuxerClass();
+  TsMuxerClass* obj = new TsMuxerClass(flags);
   ts_muxer->obj = obj;
   return ts_muxer;
 }
@@ -232,14 +234,22 @@ struct OutputStream {
   unsigned long pts = 0;
 };
 
-TsMuxerClass::TsMuxerClass(bool video_only) {
-  if (!video_only) {
+TsMuxerClass::TsMuxerClass(uint32_t flags) {
+  bool hasH264 = flags & TSMUXER_HAS_H264;
+  bool hasAAC = flags & TSMUXER_HAS_AAC;
+  if (!hasH264 && !hasAAC){
+    assert("Flags must indicate HAS_H264 and/or HAS_AAC");
+    return;
+  }
+  config_flags_ = flags;
+  if (hasAAC) {
     streams_[Codec::AAC] = OutputStream();
     streams_[Codec::AAC].pes_pid = PES_ADTS_PID;
   }
-
-  streams_[Codec::H264] = OutputStream();
-  streams_[Codec::H264].pes_pid = PES_H264_PID;
+  if (hasH264) {
+    streams_[Codec::H264] = OutputStream();
+    streams_[Codec::H264].pes_pid = PES_H264_PID;
+  }
 
   buildPmt();
 }
@@ -276,16 +286,16 @@ void TsMuxerClass::buildPmt() {
                          8));  // reserved(4) + program_info_length(4)
   pmt_.push_back(program_info_length);
 
-  // Add H264 stream
+  uint16_t es_info_length = 0x00;
+  // Add H264 stream no matter what.
   pmt_.push_back(DEFAULT_PES_H264_STREAM_ID);
   pmt_.push_back(0xe0 | (PES_H264_PID >> 8));
   pmt_.push_back(0xff & PES_H264_PID);
 
-  uint16_t es_info_length = 0x00;
   pmt_.push_back(0xf0 | es_info_length);  // reserved(4) + ES_info_length(4)
   pmt_.push_back(es_info_length);
-
-  if (streams_.find(Codec::AAC) != streams_.end()) {
+  // Add AAC stream only when flag is provided.
+  if (config_flags_ & TSMUXER_HAS_AAC) {
     pmt_.push_back(DEFAULT_PES_ADTS_STREAM_ID);
     pmt_.push_back(0xe0 | (PES_ADTS_PID >> 8));
     pmt_.push_back(0xff & PES_ADTS_PID);
