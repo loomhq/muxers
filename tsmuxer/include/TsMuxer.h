@@ -7,8 +7,8 @@
 extern "C" {
 #endif
 
-const uint32_t TSMUXER_HAS_H264   = 1 << 0;
-const uint32_t TSMUXER_HAS_AAC    = 1 << 1;
+#define TSMUXER_HAS_H264         0x00000001u
+#define TSMUXER_HAS_AAC          0x00000002u
 
 struct TsMuxer;
 const unsigned char* muxAac(struct TsMuxer* muxer,
