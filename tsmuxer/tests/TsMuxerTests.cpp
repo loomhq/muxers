@@ -161,4 +161,17 @@ TEST_F(TsMuxerTest, createsCorrectH264PESHeaderLength) {
   }
 }
 
+TEST_F(TsMuxerTest, callingMuxDoesNothingWithoutAudioFlag) {
+  ts_muxer_ = createTsMuxer(TSMUXER_HAS_H264);
+  for (int i = 0; i < 30; i++) {
+    int muxed_len;
+    const unsigned char* muxed_data =
+        muxH264(ts_muxer_, kH264IntraFrameWithSPSAndPPS, sizeof(kH264IntraFrameWithSPSAndPPS),
+                90000 * i / 30, &muxed_len);
+    ASSERT_TRUE(checkFileTSFileH264PESHeaderLength(muxed_data, muxed_len));
+    const unsigned char* audio_muxed_data = muxAac(ts_muxer_, muxed_data, sizeof(kH264IntraFrameWithSPSAndPPS), 90000 * i / 30, &muxed_len);
+    ASSERT_TRUE(checkFileTSFileH264PESHeaderLength(audio_muxed_data, muxed_len));
+  }
+}
+
 }  // namespace

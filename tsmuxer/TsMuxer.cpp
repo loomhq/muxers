@@ -87,6 +87,7 @@ struct FrameToEncode {
   Codec codec;
 };
 
+// TsMuxerClass's lifecycle begins and ends with each recording.
 class TsMuxerClass {
  public:
   TsMuxerClass(uint32_t flags);
@@ -451,6 +452,10 @@ u_char* TsMuxerClass::muxAac(const u_char* data,
                              int* muxed_len) {
   bytes_written_ = 0;  // Reset the buffer pointer
 
+  // Do nothing if configuration specifies no audio.
+  if (!(config_flags_ & TSMUXER_HAS_AAC) || streams_.find(Codec::AAC) == streams_.end()) {
+    return buffer_.data();
+  }
   // Time base for ts is 90000
   unsigned long pts_in_ts_timebase = pts_in_90khz;
   streams_.at(Codec::AAC).pts = pts_in_ts_timebase;
