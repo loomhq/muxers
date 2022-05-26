@@ -665,7 +665,7 @@ void TsMuxerClass::write_adaptation_field_section() {
 }
 
 // Will write 5 bytes
-static void writePts(uint8_t* q, uint8_t four_bits, int64_t pts) {
+void writeTsMuxerPts(uint8_t* q, uint8_t four_bits, int64_t pts) {
   int val;
   val = (int)(four_bits << 4 | (((pts >> 30) & 0x07) << 1) | 1);
   *q++ = val;
@@ -755,7 +755,7 @@ void TsMuxerClass::writePesHeader(int adapfield_size) {
       pes_header[7] = 0x80;  // Setting PTS_DTS flag to 10 (PTS only)
       pes_header[8] = 0x05;  // Size of optional PES fields (5 bytes only when
                              // PTS is present)
-      writePts(&pes_header[9], 0b0010, pts);
+      writeTsMuxerPts(&pes_header[9], 0b0010, pts);
       break;
 
     case PES_H264_PID:
@@ -765,7 +765,7 @@ void TsMuxerClass::writePesHeader(int adapfield_size) {
       pes_header[7] = 0x80;  // Setting PTS_DTS flag to 10 (PTS only)
       pes_header[8] = 0x05;  // Size of optional PES fields (5 bytes only when
                              // PTS is present)
-      writePts(&pes_header[9], 0b0010, pts);
+      writeTsMuxerPts(&pes_header[9], 0b0010, pts);
       break;
     default:
       assert(false);

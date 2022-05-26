@@ -29,6 +29,8 @@ struct TsMuxer* createTsMuxer(uint32_t flags);
 
 void destroyTsMuxer(struct TsMuxer* ts_muxer);
 
+void writeTsMuxerPts(uint8_t* q, uint8_t four_bits, int64_t pts);
+
 #ifdef __cplusplus
 }
 #endif
