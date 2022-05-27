@@ -1,7 +1,7 @@
 
 #include <gtest/gtest.h>
 
-#include "include/TsMuxer.h"
+#include "TsMuxerUtils.h"
 
 namespace {
 
@@ -19,14 +19,14 @@ static int64_t decodeTimestamp(uint8_t *x) {
 
 // exhaustively test the timestamp encoder for all 2^33 possible transport stream timestamps,
 // including "negative" ones, so 2^34.
-TEST(TsTimestampTest, testAllTimestampsSurviveRoundTrip) {
+TEST(TsMuxerUtilsTest, testAllTimestampsSurviveRoundTrip) {
   uint8_t x[5];
   const int64_t kMaxPts = 1LL << 33;
 
   for (int64_t pts = 0; pts < kMaxPts; pts++) {
     // so people don't get bored
-    if ((pts % (kMaxPts / 10)) == 0) std::cout << "testing pts at " << (100*pts/kMaxPts) << "%" << std::endl;
-    writeTsMuxerPts(x, 0b0010, pts);
+    if ((pts % (kMaxPts / 10)) == 0) std::cout << "testing pts at " << (100 * pts / kMaxPts) << "%" << std::endl;
+    TsMuxerUtils::writePts(x, 0b0010, pts);
 
     const int64_t decodedPts = decodeTimestamp(x);
 

@@ -7,20 +7,14 @@
 extern "C" {
 #endif
 
-#define TSMUXER_HAS_H264         0x00000001u
-#define TSMUXER_HAS_AAC          0x00000002u
+#define TSMUXER_HAS_H264 0x00000001u
+#define TSMUXER_HAS_AAC 0x00000002u
 
 struct TsMuxer;
-const unsigned char* muxAac(struct TsMuxer* muxer,
-                            const unsigned char* data,
-                            int length,
-                            unsigned long pts_in_90khz,
+const unsigned char* muxAac(struct TsMuxer* muxer, const unsigned char* data, int length, unsigned long pts_in_90khz,
                             int* muxed_len);
 
-const unsigned char* muxH264(struct TsMuxer* muxer,
-                             const unsigned char* data,
-                             int length,
-                             unsigned long pts_in_90khz,
+const unsigned char* muxH264(struct TsMuxer* muxer, const unsigned char* data, int length, unsigned long pts_in_90khz,
                              int* muxed_len);
 
 // Pass in a combination of flags defined above.
@@ -28,8 +22,6 @@ const unsigned char* muxH264(struct TsMuxer* muxer,
 struct TsMuxer* createTsMuxer(uint32_t flags);
 
 void destroyTsMuxer(struct TsMuxer* ts_muxer);
-
-void writeTsMuxerPts(uint8_t* q, uint8_t four_bits, int64_t pts);
 
 #ifdef __cplusplus
 }

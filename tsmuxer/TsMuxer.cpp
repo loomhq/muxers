@@ -9,6 +9,7 @@
 #include <string.h>
 
 #include "H264Utils.h"
+#include "TsMuxerUtils.h"
 typedef unsigned char u_char;
 
 #include <algorithm>
@@ -605,19 +606,6 @@ void TsMuxerClass::write_adaptation_field_section() {
   writeToBuffer(field);
 }
 
-// Will write 5 bytes
-void writeTsMuxerPts(uint8_t* q, uint8_t four_bits, int64_t pts) {
-  int val;
-  val = (int)(four_bits << 4 | (((pts >> 30) & 0x07) << 1) | 1);
-  *q++ = val;
-  val = (int)((((pts >> 15) & 0x7fff) << 1) | 1);
-  *q++ = val >> 8;
-  *q++ = val;
-  val = (int)((((pts)&0x7fff) << 1) | 1);
-  *q++ = val >> 8;
-  *q++ = val;
-}
-
 /**
  Table 2-17 PES packet "PES_packet()"
  */
@@ -692,7 +680,7 @@ void TsMuxerClass::writePesHeader(int adapfield_size) {
       pes_header[7] = 0x80;  // Setting PTS_DTS flag to 10 (PTS only)
       pes_header[8] = 0x05;  // Size of optional PES fields (5 bytes only when
                              // PTS is present)
-      writeTsMuxerPts(&pes_header[9], 0b0010, pts);
+      TsMuxerUtils::writePts(&pes_header[9], 0b0010, pts);
       break;
 
     case PES_H264_PID:
@@ -702,7 +690,7 @@ void TsMuxerClass::writePesHeader(int adapfield_size) {
       pes_header[7] = 0x80;  // Setting PTS_DTS flag to 10 (PTS only)
       pes_header[8] = 0x05;  // Size of optional PES fields (5 bytes only when
                              // PTS is present)
-      writeTsMuxerPts(&pes_header[9], 0b0010, pts);
+      TsMuxerUtils::writePts(&pes_header[9], 0b0010, pts);
       break;
     default:
       assert(false);
