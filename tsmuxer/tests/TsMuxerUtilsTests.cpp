@@ -1,5 +1,7 @@
-
 #include <gtest/gtest.h>
+
+#include <thread>
+#include <vector>
 
 #include "TsMuxerUtils.h"
 
@@ -17,20 +19,41 @@ static int64_t decodeTimestamp(uint8_t *x) {
   return pts;
 }
 
-// exhaustively test the timestamp encoder for all 2^33 possible transport stream timestamps,
-// including "negative" ones, so 2^34.
+// exhaustively test the timestamp encoder for all 2^33 possible transport stream timestamps
 TEST(TsMuxerUtilsTest, testAllTimestampsSurviveRoundTrip) {
-  uint8_t x[5];
   const int64_t kMaxPts = 1LL << 33;
 
-  for (int64_t pts = 0; pts < kMaxPts; pts++) {
-    // so people don't get bored
-    if ((pts % (kMaxPts / 10)) == 0) std::cout << "testing pts at " << (100 * pts / kMaxPts) << "%" << std::endl;
-    TsMuxerUtils::writePts(x, 0b0010, pts);
+  const int num_threads = 10;
+  const int64_t batch_size = kMaxPts / num_threads;
 
-    const int64_t decodedPts = decodeTimestamp(x);
+  std::vector<std::thread> threads;
 
-    ASSERT_TRUE(decodedPts == pts);
+  for (int thread_num = 0; thread_num < num_threads; thread_num++) {
+    const int64_t start_pts = thread_num * batch_size;
+    int64_t end_pts = (thread_num + 1) * batch_size + 1;
+
+    if (thread_num == num_threads - 1) {
+      end_pts = kMaxPts;
+    }
+    auto f = [=]() {
+      uint8_t x[5];
+      for (int64_t pts = start_pts; pts < end_pts; pts++) {
+        TsMuxerUtils::writePts(x, 0b0010, pts);
+
+        const int64_t decodedPts = decodeTimestamp(x);
+
+        ASSERT_EQ(decodedPts, pts);
+      }
+    };
+    std::thread thread(f);
+    threads.push_back(std::move(thread));
+  }
+
+  // Iterate over the thread vector
+  for (auto &thread : threads) {
+    if (thread.joinable()) {
+      thread.join();
+    }
   }
 }
 
