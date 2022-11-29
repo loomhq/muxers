@@ -30,3 +30,12 @@
 *.exe
 *.out
 *.app
+
+# swift
+.build/
+
+# bazel
+/bazel-bin
+/bazel-muxers
+/bazel-out
+/bazel-testlogs

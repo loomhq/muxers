@@ -1,7 +1,7 @@
 
-#include <tsmuxer/H264Utils.h>
-
 #include <gtest/gtest.h>
+
+#include "tsmuxer/H264Utils.h"
 
 namespace {
 
