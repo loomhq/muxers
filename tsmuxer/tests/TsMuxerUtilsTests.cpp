@@ -19,7 +19,8 @@ static int64_t decodeTimestamp(uint8_t *x) {
   return pts;
 }
 
-// exhaustively test the timestamp encoder for all 2^33 possible transport stream timestamps
+// exhaustively test the timestamp encoder for all 2^33 possible transport
+// stream timestamps
 TEST(TsMuxerUtilsTest, testAllTimestampsSurviveRoundTrip) {
   const int64_t kMaxPts = 1LL << 33;
 

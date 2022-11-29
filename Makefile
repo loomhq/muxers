@@ -39,7 +39,7 @@ build-swift-ios:
 
 .PHONY: format-clang
 format-clang:
-	@find src/tsmuxer/ -iname *.h -o -iname *.cpp | xargs clang-format -style=file -i
+	@find tsmuxer/ -iname *.h -o -iname *.cpp | xargs clang-format -style=file -i
 
 .PHONY: build
 build: build-swift-macos build-swift-ios build-c

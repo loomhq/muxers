@@ -16,9 +16,9 @@ uint8_t getNalUniTypeValue(H264Utils::NalType nal_type) {
 }
 
 bool H264Utils::hasAnnexBNalOfType(
-    const unsigned char* data,
+    const unsigned char *data,
     uint32_t length,
-    const std::vector<NalType>& nal_types_to_find) {
+    const std::vector<NalType> &nal_types_to_find) {
   uint32_t offset = 0;
 
   if (nal_types_to_find.empty()) {

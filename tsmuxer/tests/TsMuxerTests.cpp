@@ -86,7 +86,7 @@ class TsMuxerTest : public ::testing::Test {
 
   void TearDown() override { destroyTsMuxer(ts_muxer_); }
 
-  struct TsMuxer* ts_muxer_ = nullptr;
+  struct TsMuxer *ts_muxer_ = nullptr;
 };
 
 TEST_F(TsMuxerTest, shouldSucceed_whenCallingCreateAndDestroy) {
@@ -94,7 +94,7 @@ TEST_F(TsMuxerTest, shouldSucceed_whenCallingCreateAndDestroy) {
 }
 
 // See 2.4.3.6 PES packet of iso13818-1.pdf
-static bool checkFileTSFileH264PESHeaderLength(const uint8_t* transport_stream,
+static bool checkFileTSFileH264PESHeaderLength(const uint8_t *transport_stream,
                                                int transport_stream_len) {
   bool success = true;
   const int kTSPacketSize = 188;
@@ -103,7 +103,7 @@ static bool checkFileTSFileH264PESHeaderLength(const uint8_t* transport_stream,
   assert((transport_stream_len % kTSPacketSize) == 0);
 
   for (int offset = 0; offset < transport_stream_len; offset += kTSPacketSize) {
-    const uint8_t* p = transport_stream + offset;
+    const uint8_t *p = transport_stream + offset;
 
     uint16_t pid = ((uint16_t(p[1]) & 0x1f) << 8) | (uint16_t(p[2]));
     uint8_t adaptationFieldControl = (p[3] >> 4) & 0x3;
@@ -115,7 +115,7 @@ static bool checkFileTSFileH264PESHeaderLength(const uint8_t* transport_stream,
 
     // if adaptationFieldControl == 1 or 3 there's payload (pes header)
     // if 3 there's adaptation field before payload
-    const uint8_t* pesHeader = p + 4;
+    const uint8_t *pesHeader = p + 4;
     if (adaptationFieldControl == 3) {
       // skip over adaptation field to payload
       pesHeader += pesHeader[0] + 1;
@@ -137,7 +137,7 @@ static bool checkFileTSFileH264PESHeaderLength(const uint8_t* transport_stream,
     }
 
     // expect h264 start code to follow
-    const uint8_t* h264Start = pesHeader + PES_header_data_length + 9;
+    const uint8_t *h264Start = pesHeader + PES_header_data_length + 9;
     if (!(h264Start[0] == 0 && h264Start[1] == 0 && h264Start[2] == 0 &&
           h264Start[3] == 1)) {
       success = false;
@@ -152,9 +152,9 @@ TEST_F(TsMuxerTest, createsCorrectH264PESHeaderLength) {
 
   for (int i = 0; i < 30; i++) {
     int muxed_len;
-    const unsigned char* muxed_data =
-        muxH264(ts_muxer_, kH264IntraFrameWithSPSAndPPS, sizeof(kH264IntraFrameWithSPSAndPPS),
-                90000 * i / 30, &muxed_len);
+    const unsigned char *muxed_data = muxH264(
+        ts_muxer_, kH264IntraFrameWithSPSAndPPS,
+        sizeof(kH264IntraFrameWithSPSAndPPS), 90000 * i / 30, &muxed_len);
     ASSERT_TRUE(checkFileTSFileH264PESHeaderLength(muxed_data, muxed_len));
   }
 }
@@ -163,12 +163,15 @@ TEST_F(TsMuxerTest, callingMuxDoesNothingWithoutAudioFlag) {
   ts_muxer_ = createTsMuxer(TSMUXER_HAS_H264);
   for (int i = 0; i < 30; i++) {
     int muxed_len;
-    const unsigned char* muxed_data =
-        muxH264(ts_muxer_, kH264IntraFrameWithSPSAndPPS, sizeof(kH264IntraFrameWithSPSAndPPS),
-                90000 * i / 30, &muxed_len);
+    const unsigned char *muxed_data = muxH264(
+        ts_muxer_, kH264IntraFrameWithSPSAndPPS,
+        sizeof(kH264IntraFrameWithSPSAndPPS), 90000 * i / 30, &muxed_len);
     ASSERT_TRUE(checkFileTSFileH264PESHeaderLength(muxed_data, muxed_len));
-    const unsigned char* audio_muxed_data = muxAac(ts_muxer_, muxed_data, sizeof(kH264IntraFrameWithSPSAndPPS), 90000 * i / 30, &muxed_len);
-    ASSERT_TRUE(checkFileTSFileH264PESHeaderLength(audio_muxed_data, muxed_len));
+    const unsigned char *audio_muxed_data =
+        muxAac(ts_muxer_, muxed_data, sizeof(kH264IntraFrameWithSPSAndPPS),
+               90000 * i / 30, &muxed_len);
+    ASSERT_TRUE(
+        checkFileTSFileH264PESHeaderLength(audio_muxed_data, muxed_len));
   }
 }
 

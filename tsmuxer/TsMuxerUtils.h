@@ -7,7 +7,7 @@
 
 namespace TsMuxerUtils {
 
-void writePts(uint8_t* q, uint8_t four_bits, int64_t pts);
+void writePts(uint8_t *q, uint8_t four_bits, int64_t pts);
 
 }  // namespace TsMuxerUtils
 
