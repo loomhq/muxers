@@ -47,15 +47,6 @@ commands:
       - run: make test-c
 
 jobs:
-  lint-swift:
-    macos:
-      xcode: 14.0.0
-    steps:
-      - checkout
-      - run: brew install swift-format
-      - run: swift-format --version
-      - run: make lint-swift
-
   build-and-test-macos:
     macos:
       xcode: 13.3.1
@@ -92,16 +83,12 @@ jobs:
       - install-win-bazel
       - run:
           name: "Build TsMuxer"
-          command: bazel build //tsmuxer:tsmuxer
+          command: bazel build ///tsmuxer:tsmuxer
       - run:
           name: "Test TsMuxer"
-          command: bazel test --test_output=all --test_timeout=700 //tsmuxer/tests:tsmuxer_tests
+          command: bazel test --test_output=all --test_timeout=700 ///tsmuxer/tests:tsmuxer_tests
 
 workflows:
-  lint:
-    jobs:
-      - lint-swift
-
   build-and-test:
     jobs:
       - build-and-test-macos
