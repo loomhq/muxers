@@ -1,2 +1,3 @@
 brew 'clang-format'
-brew 'bazel'
+brew 'cmake'
+brew 'ninja'

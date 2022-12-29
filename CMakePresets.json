@@ -1,0 +1,122 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "default",
+      "displayName": "Default",
+      "description": "Build using Unix Makefiles generator",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "installDir": "${sourceDir}/dist",
+      "generator": "Unix Makefiles"
+    },
+    {
+      "name": "ninja",
+      "inherits": "default",
+      "displayName": "Ninja",
+      "description": "Build using Ninja Multi-Config generator",
+      "generator": "Ninja Multi-Config"
+    },
+    {
+      "name": "vs-x64",
+      "inherits": "default",
+      "displayName": "Visual Studio (x64) Configuration",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "description": "Windows only build using Visual Studio Generator",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      }
+    },
+    {
+      "name": "xcode",
+      "inherits": "default",
+      "displayName": "XCode Configuration",
+      "description": "macOS only build using XCode Generator",
+      "generator": "Xcode",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Darwin"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "default",
+      "displayName": "Default",
+      "configurePreset": "default"
+    },
+    {
+      "name": "ninja-debug",
+      "displayName": "Debug",
+      "configurePreset": "ninja",
+      "configuration": "Debug"
+    },
+    {
+      "name": "ninja-release",
+      "displayName": "Release",
+      "configurePreset": "ninja",
+      "configuration": "Release"
+    },
+    {
+      "name": "vs-x64-debug",
+      "displayName": "Debug",
+      "configurePreset": "vs-x64",
+      "configuration": "Debug"
+    },
+    {
+      "name": "vs-x64-release",
+      "displayName": "Release",
+      "configurePreset": "vs-x64",
+      "configuration": "Release"
+    },
+    {
+      "name": "xcode-debug",
+      "displayName": "Debug",
+      "configurePreset": "xcode",
+      "configuration": "Debug"
+    },
+    {
+      "name": "xcode-release",
+      "displayName": "Release",
+      "configurePreset": "xcode",
+      "configuration": "Release"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "default",
+      "configurePreset": "default",
+      "output": { "outputOnFailure": true },
+      "execution": {
+        "noTestsAction": "error",
+        "stopOnFailure": true
+      }
+    },
+    {
+      "name": "xcode",
+      "configurePreset": "xcode",
+      "output": { "outputOnFailure": true },
+      "execution": {
+        "noTestsAction": "error",
+        "stopOnFailure": true
+      }
+    },
+    {
+      "name": "vs-x64",
+      "configurePreset": "vs-x64",
+      "output": { "outputOnFailure": true },
+      "execution": {
+        "noTestsAction": "error",
+        "stopOnFailure": true
+      }
+    }
+  ]
+}

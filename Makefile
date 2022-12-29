@@ -3,7 +3,7 @@ SHELL := /bin/bash
 .PHONY: clean
 clean:
 	@-rm -rf .build/
-	@bazel clean
+	@-rm -rf build/
 	@-rm -rf *.xcodeproj
 	@-rm -rf .swiftpm
 
@@ -20,11 +20,14 @@ setup: setup-brew setup-githooks
 
 .PHONY: build-c
 build-c:
-	@bazel build //tsmuxer:tsmuxer 2>&1
+	cmake --preset default
+	cmake --build --clean-first --preset default
 
 .PHONY: test-c
 test-c:
-	@bazel test --test_output=streamed --test_timeout=700 //tsmuxer/tests:tsmuxer_tests
+	cmake --preset default
+	cmake --build --clean-first --preset default
+	ctest --preset default
 
 .PHONY: build-swift-macos
 build-swift-macos:
