@@ -3,35 +3,41 @@ version: 2.1
 orbs:
   macos: circleci/macos@2.0.1
   win: circleci/windows@4.1
-  android: circleci/android@2.0.3
 
 commands:
-  install-macos-bazel:
+  install-cmake-macos:
     steps:
       - run:
-          name: "Install Bazel"
+          name: "Install CMake"
           command: |
             set -ex
-            curl -OL "https://github.com/bazelbuild/bazel/releases/download/4.2.1/bazel-4.2.1-installer-darwin-x86_64.sh"
-            shasum -c -a 256 tools/bazel-4.2.1-installer-darwin-x86_64.sh.sha256
-            sh ./bazel-4.2.1-installer-darwin-x86_64.sh
+            brew install cmake
 
-  install-linux-bazel:
+  install-cmake-linux:
     steps:
       - run:
-          name: "Install Bazel"
+          name: "Install CMake"
           command: |
             set -ex
-            curl -OL "https://github.com/bazelbuild/bazel/releases/download/4.2.1/bazel_4.2.1-linux-x86_64.deb"
-            shasum -c -a 256 tools/bazel_4.2.1-linux-x86_64.deb.sha256
-            sudo dpkg -i bazel_4.2.1-linux-x86_64.deb
+            wget https://github.com/Kitware/CMake/releases/download/v3.25.1/cmake-3.25.1-linux-x86_64.sh -q -O /tmp/cmake-install.sh
+            chmod u+x /tmp/cmake-install.sh
+            sudo mkdir -p /usr/local/bin/cmake
+            sudo /tmp/cmake-install.sh --skip-license --prefix=/usr/local/bin/cmake
+            rm /tmp/cmake-install.sh
+            echo 'export PATH=/usr/local/bin/cmake/bin:$PATH' >> "$BASH_ENV"
+            source "$BASH_ENV"
+            cmake --version
 
-  install-win-bazel:
+  install-cmake-win:
     steps:
       - run:
-          name: "Install Bazel"
+          name: "Install CMake"
           command: |
-            choco install bazel --version=4.2.1
+            set -ex
+            choco install cmake -y
+            echo 'export PATH=/c/Program\ Files/CMake/bin:$PATH' >> "$BASH_ENV"
+            source "$BASH_ENV"
+            cmake --version
 
   build-swift-macos:
     steps:
@@ -41,19 +47,34 @@ commands:
     steps:
       - run: make build-swift-ios
 
-  build-and-test-c:
+  build-and-test-c-xcode:
     steps:
-      - run: make build-c
-      - run: make test-c
+      - run: |
+          cmake --preset xcode
+          cmake --build --clean-first --preset xcode-release
+          ctest --preset xcode
 
+  build-and-test-c-linux:
+    steps:
+      - run: |
+          cmake --preset default
+          cmake --build --clean-first --preset default
+          ctest --preset default
+
+  build-and-test-c-win:
+    steps:
+      - run: |
+          cmake --preset vs-x64
+          cmake --build --clean-first --preset vs-x64-release
+          ctest --preset vs-x64
 jobs:
   build-and-test-macos:
     macos:
       xcode: 13.3.1
     steps:
       - checkout
-      - install-macos-bazel
-      - build-and-test-c
+      - install-cmake-macos
+      - build-and-test-c-xcode
       - build-swift-macos
 
   build-and-test-ios:
@@ -61,37 +82,33 @@ jobs:
       xcode: 13.3.1
     steps:
       - checkout
-      - install-macos-bazel
-      - build-and-test-c
+      - install-cmake-macos
+      - build-and-test-c-xcode
       - build-swift-ios
 
-  build-and-test-android:
-    executor:
-      name: android/android-machine
-      tag: 2021.10.1
+  build-and-test-linux:
+    machine:
+      image: ubuntu-2204:2022.10.2
+    resource_class: small
     steps:
       - checkout
-      - install-linux-bazel
-      - build-and-test-c
+      - install-cmake-linux
+      - build-and-test-c-linux
 
   build-and-test-win:
     executor:
-      name: win/default
+      name: win/server-2022
       shell: bash.exe
+      size: medium
     steps:
       - checkout
-      - install-win-bazel
-      - run:
-          name: "Build TsMuxer"
-          command: bazel build ///tsmuxer:tsmuxer
-      - run:
-          name: "Test TsMuxer"
-          command: bazel test --test_output=all --test_timeout=700 ///tsmuxer/tests:tsmuxer_tests
+      - install-cmake-win
+      - build-and-test-c-win
 
 workflows:
   build-and-test:
     jobs:
       - build-and-test-macos
-      - build-and-test-android
+      - build-and-test-linux
       - build-and-test-win
       - build-and-test-ios

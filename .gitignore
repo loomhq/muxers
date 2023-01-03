@@ -39,3 +39,7 @@
 /bazel-muxers
 /bazel-out
 /bazel-testlogs
+
+
+# cmake
+build/
