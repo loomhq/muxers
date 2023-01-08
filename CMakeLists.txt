@@ -43,7 +43,5 @@ if(WIN32)
   add_definitions(-D_WIN32_WINNT=_WIN32_WINNT_WIN10)
 endif()
 
-include_directories(${CMAKE_SOURCE_DIR})
-
 enable_testing()
 add_subdirectory(tsmuxer)

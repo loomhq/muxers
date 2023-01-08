@@ -7,6 +7,6 @@ add_library(tsmuxer STATIC
   TsMuxerUtils.h
 )
 set_target_properties(tsmuxer PROPERTIES LINKER_LANGUAGE CXX)
-target_include_directories(tsmuxer INTERFACE .)
+target_include_directories(tsmuxer PUBLIC ${CMAKE_SOURCE_DIR}/tsmuxer)
 
 add_subdirectory(tests)

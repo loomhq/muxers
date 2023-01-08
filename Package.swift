@@ -30,7 +30,7 @@ let package = Package(
     .target(
       name: "TsMuxer",
       path: "tsmuxer",
-      exclude: ["tests", "BUILD.bazel"]
+      exclude: ["tests"]
     ),
   ],
   cxxLanguageStandard: .cxx14
