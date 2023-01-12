@@ -101,8 +101,19 @@
       }
     },
     {
-      "name": "xcode",
+      "name": "xcode-debug",
       "configurePreset": "xcode",
+      "configuration": "Debug",
+      "output": { "outputOnFailure": true },
+      "execution": {
+        "noTestsAction": "error",
+        "stopOnFailure": true
+      }
+    },
+    {
+      "name": "xcode-release",
+      "configurePreset": "xcode",
+      "configuration": "Release",
       "output": { "outputOnFailure": true },
       "execution": {
         "noTestsAction": "error",

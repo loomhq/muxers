@@ -52,7 +52,7 @@ commands:
       - run: |
           cmake --preset xcode
           cmake --build --clean-first --preset xcode-release
-          ctest --preset xcode
+          ctest --preset xcode-release
 
   build-and-test-c-linux:
     steps:
