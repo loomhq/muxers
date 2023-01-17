@@ -1,0 +1,4 @@
+module TsMuxer {
+  header "include/TsMuxer.h"
+  export *
+}

@@ -1,4 +1,4 @@
-add_library(tsmuxer STATIC
+add_library(tsmuxer
   H264Utils.cpp
   H264Utils.h
   TsMuxer.cpp
