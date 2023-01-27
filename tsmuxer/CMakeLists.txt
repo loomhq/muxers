@@ -1,4 +1,4 @@
-add_library(tsmuxer
+set(TSMUXER_SOURCE
   H264Utils.cpp
   H264Utils.h
   TsMuxer.cpp
@@ -6,7 +6,19 @@ add_library(tsmuxer
   TsMuxerUtils.cpp
   TsMuxerUtils.h
 )
-set_target_properties(tsmuxer PROPERTIES LINKER_LANGUAGE CXX)
-target_include_directories(tsmuxer PUBLIC ${CMAKE_SOURCE_DIR}/tsmuxer)
 
-add_subdirectory(tests)
+add_library(tsmuxer STATIC
+  ${TSMUXER_SOURCE}
+)
+target_include_directories(tsmuxer PUBLIC ${CMAKE_SOURCE_DIR}/tsmuxer)
+target_include_directories(tsmuxer INTERFACE "$<TARGET_FILE_DIR:tsmuxer>")
+
+add_library(tsmuxer_shared SHARED
+  ${TSMUXER_SOURCE}
+)
+target_include_directories(tsmuxer_shared PUBLIC ${CMAKE_SOURCE_DIR}/tsmuxer)
+target_include_directories(tsmuxer_shared INTERFACE "$<TARGET_FILE_DIR:tsmuxer>")
+
+if(BUILD_TESTING)
+  add_subdirectory(tests)
+endif()

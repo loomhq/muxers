@@ -9,16 +9,28 @@ set(CMAKE_CXX_STANDARD 20)
 # when compiling with PCH enabled
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Note: by default ENABLE_DEVELOPER_MODE is True
-# This means that all analysis (sanitizers, static analysis)
-# is enabled and all warnings are treated as errors
-# if you want to switch this behavior, change TRUE to FALSE
-set(ENABLE_DEVELOPER_MODE
-    TRUE
-    CACHE BOOL "Enable 'developer mode'")
+project(
+  muxers
+  VERSION 0.0.1
+  DESCRIPTION "🧩 muxer, muxer, pants👖 on fire 🔥"
+  HOMEPAGE_URL "https://github.com/loomhq/muxers"
+  LANGUAGES CXX C
+)
 
-# Change this to false if you want to disable warnings_as_errors in developer mode
-set(OPT_WARNINGS_AS_ERRORS_DEVELOPER_DEFAULT TRUE)
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+  include(CTest)
+endif()
+
+if(APPLE)
+  # Set this up earlier so dependency are built properly
+  set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
+  set(CMAKE_OSX_DEPLOYMENT_TARGET 10.14)
+endif()
+
+if(WIN32)
+  add_definitions(-DNOMINMAX)
+  add_definitions(-D_WIN32_WINNT=_WIN32_WINNT_WIN10)
+endif()
 
 include(FetchContent)
 FetchContent_Declare(
@@ -31,21 +43,6 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 if(APPLE)
   set(CMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE PRE_TEST)
 endif()
-
 FetchContent_MakeAvailable(googletest)
 
-project(
-  muxers
-  VERSION 0.0.1
-  DESCRIPTION "🧩 muxer, muxer, pants👖 on fire 🔥"
-  HOMEPAGE_URL "https://github.com/loomhq/muxers"
-  LANGUAGES CXX C
-)
-
-if(WIN32)
-  add_definitions(-DNOMINMAX)
-  add_definitions(-D_WIN32_WINNT=_WIN32_WINNT_WIN10)
-endif()
-
-enable_testing()
 add_subdirectory(tsmuxer)
