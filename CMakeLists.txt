@@ -17,9 +17,7 @@ project(
   LANGUAGES CXX C
 )
 
-if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-  include(CTest)
-endif()
+include(CTest)
 
 if(APPLE)
   # Set this up earlier so dependency are built properly
@@ -38,11 +36,14 @@ FetchContent_Declare(
   URL https://github.com/google/googletest/archive/refs/tags/release-1.12.0.zip
   DOWNLOAD_EXTRACT_TIMESTAMP YES
 )
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-if(APPLE)
-  set(CMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE PRE_TEST)
+if(NOT googletest_POPULATED)
+  # For Windows: Prevent overriding the parent project's compiler/linker settings
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  if(APPLE)
+    set(CMAKE_GTEST_DISCOVER_TESTS_DISCOVERY_MODE PRE_TEST)
+  endif()
+  FetchContent_Populate(googletest)
+  add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
-FetchContent_MakeAvailable(googletest)
 
 add_subdirectory(tsmuxer)
