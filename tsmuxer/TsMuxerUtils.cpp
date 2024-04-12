@@ -8,7 +8,7 @@ void TsMuxerUtils::writePts(uint8_t* q, uint8_t four_bits, int64_t pts) {
   val = (int)((((pts >> 15) & 0x7fff) << 1) | 1);
   *q++ = val >> 8;
   *q++ = val;
-  val = (int)((((pts)&0x7fff) << 1) | 1);
+  val = (int)((((pts) & 0x7fff) << 1) | 1);
   *q++ = val >> 8;
   *q++ = val;
 }
