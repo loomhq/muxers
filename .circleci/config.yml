@@ -70,7 +70,7 @@ commands:
 jobs:
   build-and-test-macos:
     macos:
-      xcode: 13.3.1
+      xcode: 14.3.1
     steps:
       - checkout
       - install-cmake-macos
@@ -79,7 +79,7 @@ jobs:
 
   build-and-test-ios:
     macos:
-      xcode: 13.3.1
+      xcode: 14.3.1
     steps:
       - checkout
       - install-cmake-macos
