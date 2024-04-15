@@ -202,14 +202,13 @@ struct OutputStream {
   unsigned long pts = 0;
 };
 
-TsMuxerClass::TsMuxerClass(uint32_t flags) {
+TsMuxerClass::TsMuxerClass(uint32_t flags) : config_flags_(flags) {
   bool hasH264 = flags & TSMUXER_HAS_H264;
   bool hasAAC = flags & TSMUXER_HAS_AAC;
   if (!hasH264 && !hasAAC) {
     assert("Flags must indicate HAS_H264 and/or HAS_AAC");
     return;
   }
-  config_flags_ = flags;
   if (hasAAC) {
     streams_[Codec::AAC] = OutputStream();
     streams_[Codec::AAC].pes_pid = PES_ADTS_PID;
@@ -245,8 +244,11 @@ void TsMuxerClass::buildPmt() {
   pmt_.push_back(0x00);        // section_number
   pmt_.push_back(0x00);        // last_section_number
 
-  // PCR_PID = H264 stream PID, since it'll always be present
-  uint16_t pcr_pid = PES_H264_PID;
+  bool has_h264 = config_flags_ & TSMUXER_HAS_H264;
+
+  uint16_t pcr_pid =
+      has_h264 ? PES_H264_PID : PES_ADTS_PID;  // We checked in the constructor that at least one has to exist
+
   pmt_.push_back(0xe0 | (pcr_pid >> 8));  // reserved(3) + PCR_PID(5) // e1
   pmt_.push_back(pcr_pid);
   uint16_t program_info_length = 0x00;                // length of "descriptors"
@@ -254,15 +256,20 @@ void TsMuxerClass::buildPmt() {
   pmt_.push_back(program_info_length);
 
   uint16_t es_info_length = 0x00;
-  // Add H264 stream no matter what.
-  pmt_.push_back(DEFAULT_PES_H264_STREAM_ID);
-  pmt_.push_back(0xe0 | (PES_H264_PID >> 8));
-  pmt_.push_back(0xff & PES_H264_PID);
 
-  pmt_.push_back(0xf0 | es_info_length);  // reserved(4) + ES_info_length(4)
-  pmt_.push_back(es_info_length);
-  // Add AAC stream only when flag is provided.
-  if (config_flags_ & TSMUXER_HAS_AAC) {
+  // Add H264 only if present
+  if (has_h264) {
+    pmt_.push_back(DEFAULT_PES_H264_STREAM_ID);
+    pmt_.push_back(0xe0 | (PES_H264_PID >> 8));
+    pmt_.push_back(0xff & PES_H264_PID);
+
+    pmt_.push_back(0xf0 | es_info_length);  // reserved(4) + ES_info_length(4)
+    pmt_.push_back(es_info_length);
+  }
+
+  bool has_aac = config_flags_ & TSMUXER_HAS_AAC;
+
+  if (has_aac) {
     pmt_.push_back(DEFAULT_PES_ADTS_STREAM_ID);
     pmt_.push_back(0xe0 | (PES_ADTS_PID >> 8));
     pmt_.push_back(0xff & PES_ADTS_PID);
@@ -405,7 +412,8 @@ u_char* TsMuxerClass::muxAac(const u_char* data, int data_len, unsigned long pts
 
   // Do nothing if configuration specifies no audio.
   if (!(config_flags_ & TSMUXER_HAS_AAC) || streams_.find(Codec::AAC) == streams_.end()) {
-    return buffer_.data();
+    *muxed_len = 0;
+    return nullptr;
   }
   // Time base for ts is 90000
   unsigned long pts_in_ts_timebase = pts_in_90khz;
@@ -429,6 +437,12 @@ u_char* TsMuxerClass::muxAac(const u_char* data, int data_len, unsigned long pts
 
 u_char* TsMuxerClass::muxH264(const u_char* data, int data_len, unsigned long pts_in_90khz, int* muxed_len) {
   bytes_written_ = 0;  // Reset the buffer pointer
+
+  // Do nothing if configuration specifies no h264.
+  if (!(config_flags_ & TSMUXER_HAS_H264) || streams_.find(Codec::H264) == streams_.end()) {
+    *muxed_len = 0;
+    return nullptr;
+  }
 
   // Time base for ts is 90000
   unsigned long pts_in_ts_timebase = pts_in_90khz;
