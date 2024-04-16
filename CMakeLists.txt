@@ -17,8 +17,6 @@ project(
   LANGUAGES CXX C
 )
 
-include(CTest)
-
 if(APPLE)
   # Set this up earlier so dependency are built properly
   set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
@@ -30,6 +28,9 @@ if(WIN32)
   add_definitions(-D_WIN32_WINNT=_WIN32_WINNT_WIN10)
 endif()
 
+if(PROJECT_IS_TOP_LEVEL)
+
+include(CTest)
 include(FetchContent)
 FetchContent_Declare(
   googletest
@@ -44,6 +45,8 @@ if(NOT googletest_POPULATED)
   endif()
   FetchContent_Populate(googletest)
   add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
+
 endif()
 
 add_subdirectory(tsmuxer)

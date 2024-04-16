@@ -23,6 +23,6 @@ target_include_directories(tsmuxer_shared PUBLIC
   "$<TARGET_FILE_DIR:tsmuxer_shared>"
 )
 
-if(BUILD_TESTING)
+if(PROJECT_IS_TOP_LEVEL)
   add_subdirectory(tests)
 endif()
